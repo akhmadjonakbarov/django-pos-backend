@@ -39,14 +39,13 @@ class CreateBuyDocument(APIView):
                 )
                 for index in range(len(product_doc_items)):
                     item_data: dict = product_doc_items[index]
-                    print(item_data)
                     new_doc_item: DocumentItemModel = create_doc_item(
                         element=item_data,
                         document_id=document.id,
                         user_id=request.user.id,
                     )
                     try:
-                        item_balance = DocumentItemBalanceModel.objects.get(
+                        item_balance = DocumentItemBalanceModel.active_objects().get(
                             item_id=item_data['item']['id'],
                         )
                         total_product = item_balance.qty + new_doc_item.qty
@@ -54,23 +53,20 @@ class CreateBuyDocument(APIView):
                             total_product=total_product, new_doc_item=new_doc_item,
                             product_item_balance=item_balance
                         )
-                    except Exception:
+                    except DocumentItemBalanceModel.DoesNotExist:
                         create_doc_item_balance(
                             user_id=request.user.id,
                             doc_item=new_doc_item
                         )
-                        try:
-                            SpiskaModel.objects.filter(
-                                item=new_doc_item.item
-                            ).delete()
-                        except Exception:
-                            pass
+                    SpiskaModel.objects.filter(
+                        item=new_doc_item.item
+                    ).delete()
             return res_message(
                 message=ResponseMessages.SUCCESS,
                 status=status.HTTP_201_CREATED
             )
         except Exception as e:
-            print(e)
+
             return res_error(str(e), status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -115,7 +111,7 @@ class CreateSellDocument(APIView):
                         )
                 else:
                     if builder_id != -1:
-                        builder = BuilderModel.objects.get(id=builder_id)
+                        builder = BuilderModel.active_objects().get(id=builder_id)
                         if builder is None:
                             return res_message(ResponseMessages.DATA_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
                         else:
@@ -129,7 +125,7 @@ class CreateSellDocument(APIView):
                         document_id=new_document.id,
                         user_id=user.id
                     )
-                    sold_item = DocumentItemBalanceModel.objects.get(
+                    sold_item: DocumentItemBalanceModel = DocumentItemBalanceModel.active_objects().get(
                         item_id=item_data['item']['id']
                     )
                     if sold_item:
@@ -137,10 +133,15 @@ class CreateSellDocument(APIView):
                         if total_product != 0:
                             sold_item.qty = total_product
                             sold_item.save()
-                        else:
-                            SpiskaModel.objects.create(
-                                item=sold_item.item
-                            )
+                        elif total_product == 0:
+                            try:
+                                is_exist = SpiskaModel.active_objects().get(
+                                    item=sold_item.item
+                                )
+                            except SpiskaModel.DoesNotExist:
+                                SpiskaModel.objects.create(
+                                    item=sold_item.item,
+                                )
                             sold_item.hard_delete(sold_item.pk)
                     else:
                         return res_error(ResponseMessages.DATA_NOT_FOUND, status=status.HTTP_404_NOT_FOUND)
