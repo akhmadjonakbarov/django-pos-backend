@@ -162,7 +162,7 @@ class DocumentItemBalanceModel(BaseModel):
     discount_price = models.DecimalField(decimal_places=3, max_digits=15, default=0.0, blank=True)
     selling_percentage = models.DecimalField(decimal_places=3, max_digits=15, default=0.0, blank=True)
     document = models.ForeignKey(DocumentModel, on_delete=models.CASCADE, related_name='doc_item_balances')
-    doc_item = models.ForeignKey(DocumentItemModel, on_delete=models.CASCADE, related_name='balances')
+    doc_item = models.OneToOneField(DocumentItemModel, on_delete=models.CASCADE, related_name='balance')
     currency = models.ForeignKey(
         CurrencyModel,
         on_delete=models.CASCADE,
