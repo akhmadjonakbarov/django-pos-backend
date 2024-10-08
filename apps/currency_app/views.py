@@ -30,7 +30,7 @@ class AddView(BaseView):
         try:
             new_currency = CurrencyModel.objects.create(
                 user=user,
-                value=float(str(data['value'])),
+                value=data['value'],
             )
 
             # Update DocumentItemBalanceModel items
@@ -45,6 +45,7 @@ class AddView(BaseView):
 
             return response_item(item=serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
+            print(e)
             return res_error(error=e)
 
 
