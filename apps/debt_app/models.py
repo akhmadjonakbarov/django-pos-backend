@@ -9,7 +9,7 @@ from apps.user_app import models as user_models
 class DebtModel(base_model.BaseModel):
     id = models.AutoField(primary_key=True)  # Automatically creates an auto-incrementing primary key
     name = models.CharField(max_length=255, null=True, blank=True)
-    phone_number = models.CharField(max_length=15)  # Adjust max_length as needed
+    phone_number = models.CharField(max_length=15, )  # Adjust max_length as needed
     phone_number2 = models.CharField(max_length=15, null=True, blank=True)  # Adjust max_length as needed
     address = models.CharField(max_length=255, null=True, blank=True)
     user = models.ForeignKey(
